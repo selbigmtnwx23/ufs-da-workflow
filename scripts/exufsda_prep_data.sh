@@ -477,13 +477,18 @@ if [[ ( "${TYPE_ANAL_FCST}" == "both" || "${TYPE_ANAL_FCST}" == "anal-only" ||
     if [ "${CUSTOM_JEDI_CONFIG_FLAG}" = "TEMPLATE" ]; then
       soca_timewindow_begin_iso="${yyyy_hf}-${mm_hf}-${dd_hf}T${hh_hf}:00:00Z"
       soca_background_date_iso="${YYYY}-${MM}-${DD}T${HH}:00:00Z"
+      soca_bkg_error_hz_fn="diffusion_cor1_hz"
+      soca_bkg_error_vt_fn="diffusion_cor1_vt"
       settings="\
   'cdate': !!str ${PDY}${cyc}
   'cycle': ${cycle}
+  'MOM6_NK': ${MOM6_NK}
   'OBS_SOCA_RTOFS': '${OBS_SOCA_RTOFS}'
   'PDY': !!str ${PDY}
   'soca_timewindow_begin_iso': !!str ${soca_timewindow_begin_iso}
   'soca_background_date_iso': !!str ${soca_background_date_iso}
+  'soca_bkg_error_hz_fn': ${soca_bkg_error_hz_fn}
+  'soca_bkg_error_vt_fn': ${soca_bkg_error_vt_fn}
 " # End of settings variable
       fn_template="template.jedi_3dvar_soca.yaml"
       fp_template="${PARMufsda}/jedi/soca/${fn_template}"
@@ -674,8 +679,9 @@ if [[ "${JEDI_TYPE_SOCA}" == "YES" && "${do_soca_prep}" = "YES" &&
     data_dir="${COMINrestart_mc1}"
   fi
   r_fp="${data_dir}/${filedate}.MOM.res.nc"
+  bkg_fp="${DATA}/soca_prep/INPUT/MOM.res.nc"
   if [ -e "${r_fp}" ]; then
-    ln -nsf "${r_fp}" INPUT/MOM.res.nc
+    ln -nsf "${r_fp}" "${bkg_fp}"
   else
     err_exit "Symlink failed: ${r_fp} file does not exist."
   fi
@@ -686,11 +692,12 @@ if [[ "${JEDI_TYPE_SOCA}" == "YES" && "${do_soca_prep}" = "YES" &&
   ## Make sure this should run in parallel, otherwise it will cause unexpected errors.
 
   path_mom6_fix_dir="${FIXufsda}/DATA_fix/MOM6"
-  soca_gridspec_fn="soca_gridspec_${MOM6_NIGLOBAL}x${MOM6_NJGLOBAL}x${MOM6_NK}.nc"
+  soca_gridspec_prefix="soca_gridspec"
+  soca_gridspec_fn="${soca_gridspec_prefix}_${MOM6_NIGLOBAL}x${MOM6_NJGLOBAL}x${MOM6_NK}.nc"
   if [ -e "${path_mom6_fix_dir}/${soca_gridspec_fn}" ]; then
-    cp -p "${path_mom6_fix_dir}/${soca_gridspec_fn}" "soca_gridspec.nc"
+    cp -p "${path_mom6_fix_dir}/${soca_gridspec_fn}" "${soca_gridspec_prefix}.nc"
   elif [ -e "${DATA_SHARE}/${soca_gridspec_fn}" ]; then
-    cp -p "${DATA_SHARE}/${soca_gridspec_fn}" "soca_gridspec.nc"
+    cp -p "${DATA_SHARE}/${soca_gridspec_fn}" "${soca_gridspec_prefix}.nc"
   else
     ### SOCA input yaml file
     jedi_nml_fn="gridgen.yaml"
@@ -749,6 +756,7 @@ if [[ "${JEDI_TYPE_SOCA}" == "YES" && "${do_soca_prep}" = "YES" &&
     ln -nsf "${COMINOUT}/${soca_gridspec_fn}" "${DATA_SHARE}/${soca_gridspec_fn}"
   fi
 
+
   ##################
   ## setcorscales
   ##################
@@ -759,12 +767,16 @@ if [[ "${JEDI_TYPE_SOCA}" == "YES" && "${do_soca_prep}" = "YES" &&
   soca_cor_rv_fn="${soca_cor_rv_fn_prefix}_${MOM6_NIGLOBAL}x${MOM6_NJGLOBAL}x${MOM6_NK}.nc"
   if [ -e "${path_mom6_fix_dir}/${soca_cor_rh_fn}" ] && \
      [ -e "${path_mom6_fix_dir}/${soca_cor_rv_fn}" ]; then
-    cp -p "${path_mom6_fix_dir}/${soca_cor_rh_fn}" "${soca_cor_rh_fn_prefix}.nc"
-    cp -p "${path_mom6_fix_dir}/${soca_cor_rv_fn}" "${soca_cor_rv_fn_prefix}.nc"
+    cp -p "${path_mom6_fix_dir}/${soca_cor_rh_fn}" "${soca_cor_rh_fn_prefix}_orig.nc"
+    cp -p "${path_mom6_fix_dir}/${soca_cor_rv_fn}" "${soca_cor_rv_fn_prefix}_orig.nc"
+    cp -p "${soca_cor_rh_fn_prefix}_orig.nc" "${soca_cor_rh_fn_prefix}_mod.nc"
+    cp -p "${soca_cor_rv_fn_prefix}_orig.nc" "${soca_cor_rv_fn_prefix}_mod.nc"
   elif [ -e "${DATA_SHARE}/${soca_cor_rh_fn}" ] && \
        [ -e "${DATA_SHARE}/${soca_cor_rv_fn}" ]; then
-    cp -p "${DATA_SHARE}/${soca_cor_rh_fn}" "${soca_cor_rh_fn_prefix}.nc"
-    cp -p "${DATA_SHARE}/${soca_cor_rv_fn}" "${soca_cor_rv_fn_prefix}.nc"
+    cp -p "${DATA_SHARE}/${soca_cor_rh_fn}" "${soca_cor_rh_fn_prefix}_orig.nc"
+    cp -p "${DATA_SHARE}/${soca_cor_rv_fn}" "${soca_cor_rv_fn_prefix}_orig.nc"
+    cp -p "${soca_cor_rh_fn_prefix}_orig.nc" "${soca_cor_rh_fn_prefix}_mod.nc"
+    cp -p "${soca_cor_rv_fn_prefix}_orig.nc" "${soca_cor_rv_fn_prefix}_mod.nc"
   else
     ### SOCA input yaml file
     jedi_nml_fn="setcorscales.yaml"
@@ -784,9 +796,47 @@ if [[ "${JEDI_TYPE_SOCA}" == "YES" && "${do_soca_prep}" = "YES" &&
     if [[ $err != 0 ]]; then
       err_exit "JEDI SOCA setcorscales failed"
     fi
-    cp -p "${soca_cor_rh_fn_prefix}.${tmp_time_iso}.nc" "${soca_cor_rh_fn_prefix}.nc"
-    cp -p "${soca_cor_rv_fn_prefix}.${tmp_time_iso}.nc" "${soca_cor_rv_fn_prefix}.nc"
+    cp -p "${soca_cor_rh_fn_prefix}.${tmp_time_iso}.nc" "${soca_cor_rh_fn_prefix}_orig.nc"
+    cp -p "${soca_cor_rv_fn_prefix}.${tmp_time_iso}.nc" "${soca_cor_rv_fn_prefix}_orig.nc"
+    cp -p "${soca_cor_rh_fn_prefix}_orig.nc" "${soca_cor_rh_fn_prefix}_mod.nc"
+    cp -p "${soca_cor_rv_fn_prefix}_orig.nc" "${soca_cor_rv_fn_prefix}_mod.nc"
   fi
+
+  ### Calculate horizontal and vertical correlation scales
+  output_fn_scales_cor="scales_cor1.nc"
+  cat > calc_scales4parameter.yaml <<EOF
+bkg_fp: '${bkg_fp}'
+gridspec_fn: '${soca_gridspec_prefix}.nc'
+HZ_MAX: 3.0e5
+HZ_MIN_GRID_MULT: 2.0
+HZ_ROSSBY_MULT: 2.0
+mld_fp: '${bkg_fp}'
+mld_vn: 'MLD'
+output_fn: '${output_fn_scales_cor}'
+output_variable_hz: 'hz'
+output_variable_vt: 'vt'
+PY_LOG_LEVEL: '${PY_LOG_LEVEL}'
+VT_MIN: 1.5
+VT_MAX: 50
+work_dir: '${DATA}/soca_prep'
+EOF
+
+  ${USHufsda}/calc_scales4parameter.py
+  if [ $? -ne 0 ]; then
+    err_exit "Correlation length scales calculation failed."
+  fi
+  cp -p ${output_fn_scales_cor} ${COMINOUT}
+
+  ### Replace horizontal and vertical correlation scales
+  ncks -A -v hz ${output_fn_scales_cor} "${soca_cor_rh_fn_prefix}_mod.nc"
+  ncap2 -O -s "Temp=hz;Salt=hz;ave_ssh(0,:,:)=hz(0,0,:,:);u=hz;v=hz" \
+              "${soca_cor_rh_fn_prefix}_mod.nc" "${soca_cor_rh_fn_prefix}.nc"
+
+  ncks -A -v vt ${output_fn_scales_cor} "${soca_cor_rv_fn_prefix}_mod.nc"
+  ncap2 -O -s "Temp=vt;Salt=vt;ave_ssh(0,:,:)=vt(0,0,:,:);u=vt;v=vt" \
+              "${soca_cor_rv_fn_prefix}_mod.nc" "${soca_cor_rv_fn_prefix}.nc"
+
+  ### Copy output files to COMINOUT
   cp -p "${soca_cor_rh_fn_prefix}.nc" "${COMINOUT}/${soca_cor_rh_fn}"
   cp -p "${soca_cor_rv_fn_prefix}.nc" "${COMINOUT}/${soca_cor_rv_fn}"
   if [ ! -e "${DATA_SHARE}/${soca_cor_rh_fn}" ]; then
@@ -796,6 +846,7 @@ if [[ "${JEDI_TYPE_SOCA}" == "YES" && "${do_soca_prep}" = "YES" &&
     ln -nsf "${COMINOUT}/${soca_cor_rv_fn}" "${DATA_SHARE}/${soca_cor_rv_fn}"
   fi
 
+
   ##########################
   ## parameters_diffusion
   ##########################
@@ -803,14 +854,16 @@ if [[ "${JEDI_TYPE_SOCA}" == "YES" && "${do_soca_prep}" = "YES" &&
   ### SOCA input yaml file
   soca_background_basename="${DATA}/soca_prep/INPUT"
   soca_background_date_iso="${YYYY}-${MM}-${DD}T${HH}:00:00Z"
-  soca_diff_cor_hz1_fn="diffusion_cor1_hz_rossby"
-  soca_diff_cor_hz2_fn="diffusion_cor1_hz_600km"
-  soca_diff_cor_vt_fn="diffusion_cor1_vt_6lvls"
+  soca_bkg_error_hz_ocn_fn="${soca_cor_rh_fn_prefix}.nc"
+  soca_bkg_error_vt_ocn_fn="${soca_cor_rv_fn_prefix}.nc"
+  soca_diff_cor_hz_fn="diffusion_cor1_hz"
+  soca_diff_cor_vt_fn="diffusion_cor1_vt"
   settings="\
   'soca_background_basename': ${soca_background_basename}
   'soca_background_date_iso': !!str ${soca_background_date_iso}
-  'soca_diff_cor_hz1_fn': ${soca_diff_cor_hz1_fn}
-  'soca_diff_cor_hz2_fn': ${soca_diff_cor_hz2_fn}
+  'soca_bkg_error_hz_ocn_fn': ${soca_bkg_error_hz_ocn_fn}
+  'soca_bkg_error_vt_ocn_fn': ${soca_bkg_error_vt_ocn_fn}
+  'soca_diff_cor_hz_fn': ${soca_diff_cor_hz_fn}
   'soca_diff_cor_vt_fn': ${soca_diff_cor_vt_fn}
 " # End of settings variable
   fn_template="template.parameters_diffusion.yaml"
@@ -818,7 +871,7 @@ if [[ "${JEDI_TYPE_SOCA}" == "YES" && "${do_soca_prep}" = "YES" &&
   jedi_nml_fn="parameters_diffusion.yaml"
   ${USHufsda}/fill_jinja_template.py -u "${settings}" -t "${fp_template}" -o "${jedi_nml_fn}"
 
-  ### Run soca_error_covariance_toolbox.x
+  ### Executable for parameters diffusion
   if [ "${JEDI_BUNDLE_GDAS}" = "gdas" ]; then
     jedi_exe_fn="gdas_soca_error_covariance_toolbox.x"
   else
@@ -832,8 +885,7 @@ if [[ "${JEDI_TYPE_SOCA}" == "YES" && "${do_soca_prep}" = "YES" &&
   if [[ $err != 0 ]]; then
     err_exit "JEDI SOCA parameters_diffusion failed"
   fi
-  cp -p "${soca_diff_cor_hz1_fn}.nc" "${COMINOUT}/${soca_diff_cor_hz1_fn}_${PDY}${cyc}.nc"
-  cp -p "${soca_diff_cor_hz2_fn}.nc" "${COMINOUT}/${soca_diff_cor_hz2_fn}_${PDY}${cyc}.nc"
+  cp -p "${soca_diff_cor_hz_fn}.nc" "${COMINOUT}/${soca_diff_cor_hz_fn}_${PDY}${cyc}.nc"
   cp -p "${soca_diff_cor_vt_fn}.nc" "${COMINOUT}/${soca_diff_cor_vt_fn}_${PDY}${cyc}.nc"
 
   #############

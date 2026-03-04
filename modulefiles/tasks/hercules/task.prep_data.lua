@@ -6,6 +6,7 @@ load(pathJoin("intel-oneapi-mkl", intel_oneapi_mkl_ver))
 
 load(pathJoin("ecflow", ecflow_ver))
 load(pathJoin("esmf", esmf_ver))
+load(pathJoin("nco", nco_ver))
 load(pathJoin("prod_util", prod_util_ver))
 
 prepend_path("MODULEPATH", os.getenv("modulepath_pymodule"))

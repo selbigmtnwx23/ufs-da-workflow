@@ -27,20 +27,16 @@ background error:
           model file:
             date: *date
             basename: ./
-            ocn_filename: ocn.cor_rh.incr.nc
+            ocn_filename: {{ soca_bkg_error_hz_ocn_fn }}
           model variable: sea_surface_height_above_geoid
         write:
-          filepath: ./{{ soca_diff_cor_hz1_fn }}
-      - horizontal:
-          fixed value: 600000.0
-          mask: "interp_mask"
-          as gaussian: true
-        write:
-          filepath: ./{{ soca_diff_cor_hz2_fn }}
+          filepath: ./{{ soca_diff_cor_hz_fn }}
       - vertical:
-          fixed value: 6.0
-          levels: 75
-          mask: "interp_mask"
-          as gaussian: true
+          model file:
+            date: *date
+            basename: ./
+            ocn_filename: {{ soca_bkg_error_vt_ocn_fn }}
+          model variable: sea_water_potential_temperature
         write:
           filepath: ./{{ soca_diff_cor_vt_fn }}
+

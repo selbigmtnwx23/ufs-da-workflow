@@ -42,14 +42,12 @@ cost function:
         - variables:
           - sea_water_potential_temperature
           - sea_water_salinity
+          - sea_surface_height_above_geoid
           horizontal:
-            filepath: ./diffusion_cor1_hz_600km
+            filepath: ./{{ soca_bkg_error_hz_fn }}
           vertical:
-            levels: 75
-            filepath: ./diffusion_cor1_vt_6lvls
-        - variables: [sea_surface_height_above_geoid]
-          horizontal:
-            filepath: ./diffusion_cor1_hz_600km
+            levels: {{ MOM6_NK }}
+            filepath: ./{{ soca_bkg_error_vt_fn }}
 
     saber outer blocks:
     - saber block name: SOCABkgErrFilt

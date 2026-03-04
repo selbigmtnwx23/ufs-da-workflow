@@ -7,6 +7,7 @@
 ## History ===============================
 ## V000: 2024/12/10: Chan-Hoo Jeon : Preliminary version
 ## V001: 2025/10/23: Chan-Hoo Jeon : Add options for SOCA C-test
+## V002: 2026/03/04: Chan-Hoo Jeon : Add SOCA mask option
 ###################################################################### CHJ #####
 
 import os, sys
@@ -102,7 +103,7 @@ def main():
         elif jtype == "soil_moisture":
             var_list_sfc.append("smc")
         elif jtype == "soca":
-            var_list_ocn += ["Salt", "Temp", "ave_ssh"]
+            var_list_ocn += ["Salt", "Temp", "ave_ssh", "h"]
         elif jtype == "soca_ctest":
             var_list_ocn += ["Salt", "Temp", "ave_ssh"]
             if JEDI_ALGORITHM == "3dvar":
@@ -226,6 +227,11 @@ def get_geo_grd(grid_path,grid_fn,jtype):
         glat_o = np.ma.masked_invalid(data_raw.variables['lat'])
         glon = np.squeeze(glon_o,axis=0)
         glat = np.squeeze(glat_o,axis=0)
+
+    if jtype == "soca":
+        mask_o = np.ma.masked_invalid(data_raw.variables['mask2d'])
+        mask2d = np.squeeze(mask_o,axis=0)
+        plot_data(mask2d,"mask","orig",0,jtype,"SOCA::GRIDSPEC","soca_gridspec",grid_path,False)
 
     data_raw.close()
     logging.info(f''' glon = {glon.shape}''')
@@ -420,6 +426,8 @@ def plot_data(plt_var,plt_var_nm,plt_out_txt,zlvl,jedi_type,out_title_base,
 
     if plt_var_nm == 'snodl' or plt_var_nm == 'snwdph':
         cmap_range_opt='fixed'
+    elif plt_var_nm == 'mask':
+        cmap_range_opt='fixed'
     else:
         cmap_range_opt='real'
     cs_cmap='gist_ncar_r'
@@ -439,9 +447,15 @@ def plot_data(plt_var,plt_var_nm,plt_out_txt,zlvl,jedi_type,out_title_base,
         cs_max=var_max
         cbar_extend='neither'
     elif cmap_range_opt=='fixed':
-        cs_min=0.0
-        cs_max=800.0
-        cbar_extend='both'
+        if plt_var_nm == "mask":
+            cs_cmap=plt.get_cmap('Accent',3)
+            cs_min=0
+            cs_max=2
+            cbar_extend='neither'
+        else:
+            cs_min=0.0
+            cs_max=800.0
+            cbar_extend='both'
     else:
         sys.exit('FATAL ERROR: wrong colormap-range flag !!!')
 
