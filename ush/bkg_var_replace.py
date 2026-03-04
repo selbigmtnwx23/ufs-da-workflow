@@ -7,6 +7,7 @@
 ## History ===============================
 ## V000: 2025/07/09: Chan-Hoo Jeon : Preliminary version
 ## V001: 2025/11/13: Chan-Hoo Jeon : Add single file option
+## V002: 2026/03/04: Chan-Hoo Jeon : Add grid-mask
 ###################################################################### CHJ #####
 
 import os
@@ -22,7 +23,7 @@ import matplotlib.pyplot as plt
 # Main part (will be called at the end) ============================= CHJ =====
 def main():
 
-    global bkg_data_fn_suffix,fn_data_base,jedi_out_fn_prefix,jedi_out_fn_suffix
+    global bkg_data_fn_suffix,fn_data_base,fn_grid_mask,jedi_out_fn_prefix,jedi_out_fn_suffix
     global new_bkg_data_fn_suffix,work_dir
 
     yaml_file = "bkg_var_replace.yaml"
@@ -32,12 +33,14 @@ def main():
 
     bkg_data_fn_suffix = yaml_data['bkg_data_fn_suffix']
     fn_data_base = yaml_data['fn_data_base']
+    fn_grid_mask = yaml_data['fn_grid_mask']
     jedi_out_fn_prefix = yaml_data['jedi_out_fn_prefix']
     jedi_out_fn_suffix = yaml_data['jedi_out_fn_suffix']
     JEDI_TYPE_SOCA = yaml_data['JEDI_TYPE_SOCA']
     new_bkg_data_fn_suffix = yaml_data['new_bkg_data_fn_suffix']
     num_tiles = yaml_data['num_tiles']
     PY_LOG_LEVEL = yaml_data['PY_LOG_LEVEL']
+    replace_opt = yaml_data['replace_opt']
     work_dir = yaml_data['work_dir']
 
     # Set logging config
@@ -53,7 +56,7 @@ def main():
     logging.info(f''' YAML Data: {yaml_data}''')
    
     if JEDI_TYPE_SOCA == "YES":
-        var_list = ["Salt", "Temp", "ave_ssh", "h"] 
+        var_list = ["Salt", "Temp", "ave_ssh", "h"]
     else:
         var_list = ["smc"]
 
@@ -68,20 +71,25 @@ def main():
         new_bkg_data_fp = os.path.join(work_dir, new_bkg_data_fn)
         logging.info(f''' File 1: {bkg_data_fp}''')
         logging.info(f''' File 2: {jedi_out_fp}''')
-
-        replace_var_file(var_list,bkg_data_fp,jedi_out_fp,new_bkg_data_fp)
-        compare_vars_two_files(jedi_out_fp,new_bkg_data_fp, var_list)
+        replace_var_file(var_list,bkg_data_fp,jedi_out_fp,new_bkg_data_fp,replace_opt)
+        if replace_opt != "mask":
+            compare_vars_two_files(jedi_out_fp,new_bkg_data_fp, var_list)
     else:
         replace_var_tile(var_list, num_tiles)
 
 
 # Replace variables for single file ============================= CHJ =====
-def replace_var_file(var_list,bkg_data_fp,jedi_out_fp,new_bkg_data_fp):
+def replace_var_file(var_list,bkg_data_fp,jedi_out_fp,new_bkg_data_fp,replace_opt):
 
-    # Open the NetCDF datasets
+    # Open mask file
+    ds_mask = Dataset(fn_grid_mask, 'r')
+    mask2d_raw = ds_mask.variables['mask2d'][:]
+    mask2d = np.squeeze(mask2d_raw)
+
+    # Open NetCDF datasets
     dsA = Dataset(bkg_data_fp, 'r')
     dsB = Dataset(jedi_out_fp, 'r')
-    # Create a new file
+    # Create new file
     ds_out = Dataset(new_bkg_data_fp, 'w', format='NETCDF4')
 
     # Copy dimensions
@@ -111,15 +119,35 @@ def replace_var_file(var_list,bkg_data_fp,jedi_out_fp,new_bkg_data_fp):
                 raise ValueError(f'''Dimension mismatch (excluding Time): {varA.shape} vs {varB.shape}''')
 
             # Replace data (excluding 'Time' dimension)
-            if 'Time' in varA.dimensions and 'Time' in varB.dimensions:
-                # Use time-mean from B
-                dataB = np.mean(varB[:], axis=0)
+            if replace_opt == "mask":
                 dataA = varA[:]
-                for t in range(dataA.shape[0]):
-                    dataA[t, ...] = dataB
+                dataB = varB[:]                
+                if 'Time' in varA.dimensions:
+                    # assume Time is first dimension
+                    for t in range(dataA.shape[0]):
+                        if dataA.ndim == 3:  # (Time, y, x)
+                            dataA[t, mask2d == 1] = dataB[t, mask2d == 1]
+                        elif dataA.ndim == 4:  # (Time, z, y, x)
+                            for k in range(dataA.shape[1]):
+                                dataA[t, k, mask2d == 1] = dataB[t, k, mask2d == 1]
+                else:
+                    if dataA.ndim == 2:  # (y, x)
+                        dataA[mask2d == 1] = dataB[mask2d == 1]
+                    elif dataA.ndim == 3:  # (z, y, x)
+                        for k in range(dataA.shape[0]):
+                            dataA[k, mask2d == 1] = dataB[k, mask2d == 1]
+                
                 outVar[:] = dataA
             else:
-                outVar[:] = varB[:]
+                if 'Time' in varA.dimensions and 'Time' in varB.dimensions:
+                    # Use time-mean from B
+                    dataB = np.mean(varB[:], axis=0)
+                    dataA = varA[:]
+                    for t in range(dataA.shape[0]):
+                        dataA[t, ...] = dataB
+                    outVar[:] = dataA
+                else:
+                    outVar[:] = varB[:]
     
             logging.info(f'''Replaced variable '{name}' in {bkg_data_fp} using {jedi_out_fp} (excluding 'Time').''')
     

@@ -266,7 +266,10 @@ if [ "${JEDI_TYPE_SOCA}" = "YES" ] && [ "${TYPE_ANAL_FCST}" != "ctest" ]; then
   if [ "${OBS_SOCA_RTOFS}" = "YES" ]; then
     vars_list=( "waterTemperature" "salinity" )
     for ivar in "${vars_list[@]}" ; do
-      ln -nsf "${COMINOUTobs}/${obs_prefix}.rtofs_prof_${ivar}.nc" "${DATA}/obs"
+#      ln -nsf "${COMINOUTobs}/${obs_prefix}.rtofs_prof_${ivar}.nc" "${DATA}/obs"
+# RTOFS ioda converter needs to be fixed ## 
+# Temporary link
+      ln -nsf "${FIXufsda}/DATA_obs/soca/prof_insitu_${PDY}${cyc}.nc" "obs/${obs_prefix}.rtofs_prof_${ivar}.nc"
     done
   fi
   ##### temporary link for 3d-var #####
@@ -320,6 +323,7 @@ JEDI_TYPE_SOCA: '${JEDI_TYPE_SOCA}'
 new_bkg_data_fn_suffix: '${new_bkg_data_fn_suffix}'
 num_tiles: 0
 PY_LOG_LEVEL: '${PY_LOG_LEVEL}'
+replace_opt: 'mask'
 work_dir: '${DATA}'
 EOF
   ${USHufsda}/bkg_var_replace.py
