@@ -45,7 +45,11 @@ exclude_patterns = []
 pygments_style = 'sphinx'
 
 # Documentation-wide substitutions
-
+rst_prolog = """
+.. |latestr| replace:: develop
+.. |spack-stack-ver| replace:: 1.6.0
+.. |branch| replace:: develop
+"""
 
 # -- Linkcheck options -------------------------------------------------
 
@@ -129,6 +133,7 @@ extlinks = {'ccpp-techdoc': ('https://ccpp-techdoc.readthedocs.io/en/latest/%s',
             'rst': ('https://www.sphinx-doc.org/en/master/usage/restructuredtext/%s', '%s'),
             'rtd': ('https://readthedocs.org/projects/ufs-da-workflow/%s', '%s'),
             'da-wflow-repo': ('https://github.com/ufs-community/ufs-da-workflow/%s', '%s'),
+            'land-wflow-repo': ('https://github.com/ufs-community/land-DA_workflow/%s', '%s'),
             'da-wflow-wiki': ('https://github.com/ufs-community/ufs-da-workflow/wiki/%s','%s'),
             'spack-stack': ('https://spack-stack.readthedocs.io/en/1.6.0/%s', '%s'),
             'stochphys': ('https://stochastic-physics.readthedocs.io/en/release-public-v3/%s', '%s'),
