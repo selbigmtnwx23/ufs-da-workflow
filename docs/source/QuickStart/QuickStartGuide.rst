@@ -80,7 +80,7 @@ Note: Running and building the UFS Da Workflow options below will have different
 .. _load-env:
 
 Load the Workflow Environment
-===============================
+******************************
 
 To load the workflow environment:
 
@@ -93,7 +93,7 @@ To load the workflow environment:
 where `[workflow_manager]` is `ecflow`, `rocoto`, or `none`, and `[machine]` is `gaeac6`, `hercules`, `orion`, `ursa`, or `derecho`.
 
 Modify the Workflow Configuration YAML
-========================================
+**************************************
 
 Copy the experiment settings into ``config.yaml``:
 
@@ -114,7 +114,7 @@ Users will need to configure the ``account`` variable in ``config.yaml``.
 .. _generate-wflow:
 
 Set Up and Launch the Workflow
-=======================
+*******************************
 
 Generate the experiment directory by running: 
 
