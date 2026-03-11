@@ -835,7 +835,78 @@ if [[ "${JEDI_TYPE_SOCA}" == "YES" && "${do_soca_prep}" = "YES" &&
     ###########################
     ### parameters_diffusion
     ########################### 
-    echo "... UNDER DEVELOPMENT ..."
+    ### SOCA input yaml file
+    soca_background_basename="${DATA}/soca_prep/INPUT"
+    soca_background_date_iso="${YYYY}-${MM}-${DD}T${HH}:00:00Z"
+    soca_background_filename_ocn="MOM.res.nc"
+    soca_background_filename_ice="cice_model.res.nc"
+    soca_bkg_error_hz_ocn_fn="${soca_cor_rh_fn_prefix}.nc"
+    soca_bkg_error_vt_ocn_fn="${soca_cor_rv_fn_prefix}.nc"
+    soca_diff_cor_hz_fn="hz_ocean"
+    soca_diff_cor_vt_fn="vt_ocean"
+    soca_vt_scales_prefix="vt_scales"
+    soca_vt_scales_fn="${soca_vt_scales_prefix}.nc"
+    settings="\
+  'soca_background_basename': ${soca_background_basename}
+  'soca_background_date_iso': !!str ${soca_background_date_iso}
+  'soca_background_filename_ocn': ${soca_background_filename_ocn}
+  'soca_background_filename_ice': ${soca_background_filename_ice}
+  'soca_bkg_error_hz_ocn_fn': ${soca_bkg_error_hz_ocn_fn}
+  'soca_bkg_error_vt_ocn_fn': ${soca_bkg_error_vt_ocn_fn}
+  'soca_diff_cor_hz_fn': ${soca_diff_cor_hz_fn}
+  'soca_diff_cor_vt_fn': ${soca_diff_cor_vt_fn}
+  'soca_output_fn_vt_scales': ${soca_output_fn_vt_scales}
+" # End of settings variable
+
+    ### Executable for parameters diffusion
+    if [ "${JEDI_BUNDLE_GDAS}" = "gdas" ]; then
+      jedi_exe_fn="gdas_soca_error_covariance_toolbox.x"
+    else
+      jedi_exe_fn="soca_error_covariance_toolbox.x"
+    fi
+    export pgm="${jedi_exe_fn}"
+
+    ### vt_scales
+    fn_template="template.soca_vtscales_emc.yaml"
+    fp_template="${PARMufsda}/jedi/soca/${fn_template}"
+    jedi_nml_fn="soca_vtscales.yaml"
+    ${USHufsda}/fill_jinja_template.py -u "${settings}" -t "${fp_template}" -o "${jedi_nml_fn}"
+    . prep_step
+    ${RUN_CMD} -n ${NPROCS_PREP_DATA} ${JEDI_BIN_PATH}/$pgm ${jedi_nml_fn} >>$pgmout 2>errfile
+    export err=$?; err_chk
+    cp errfile errfile_vtscales
+    if [[ $err != 0 ]]; then
+      err_exit "JEDI SOCA vtscales failed"
+    fi
+    cp -p "${soca_vt_scales_fn}" "${COMINOUT}/${soca_vt_scales_prefix}_${PDY}${cyc}.nc"
+
+    ### Horizontal (hz)
+    fn_template="template.soca_parameters_diffusion_hz_emc.yaml"
+    fp_template="${PARMufsda}/jedi/soca/${fn_template}"
+    jedi_nml_fn="soca_parameters_diffusion_hz.yaml"
+    ${USHufsda}/fill_jinja_template.py -u "${settings}" -t "${fp_template}" -o "${jedi_nml_fn}"
+    . prep_step
+    ${RUN_CMD} -n ${NPROCS_PREP_DATA} ${JEDI_BIN_PATH}/$pgm ${jedi_nml_fn} >>$pgmout 2>errfile
+    export err=$?; err_chk
+    cp errfile errfile_parameters_diffusion_hz
+    if [[ $err != 0 ]]; then
+      err_exit "JEDI SOCA horizontal parameters_diffusion (hz) failed"
+    fi
+    cp -p "${soca_diff_cor_hz_fn}.nc" "${COMINOUT}/${soca_diff_cor_hz_fn}_${PDY}${cyc}.nc"
+
+    ### Vertical (vt)
+    fn_template="template.soca_parameters_diffusion_vt_emc.yaml"
+    fp_template="${PARMufsda}/jedi/soca/${fn_template}"
+    jedi_nml_fn="soca_parameters_diffusion_vt.yaml"
+    ${USHufsda}/fill_jinja_template.py -u "${settings}" -t "${fp_template}" -o "${jedi_nml_fn}"
+    . prep_step
+    ${RUN_CMD} -n ${NPROCS_PREP_DATA} ${JEDI_BIN_PATH}/$pgm ${jedi_nml_fn} >>$pgmout 2>errfile
+    export err=$?; err_chk
+    cp errfile errfile_parameters_diffusion_vt
+    if [[ $err != 0 ]]; then
+	    err_exit "JEDI SOCA vertical parameters_diffusion (vt) failed"
+    fi
+    cp -p "${soca_diff_cor_vt_fn}.nc" "${COMINOUT}/${soca_diff_cor_vt_fn}_${PDY}${cyc}.nc"
 
   ## Approach by NOAA-CPC
   elif [ "${JEDI_SOCA_B_MATRIX}" = "cpc" ]; then
@@ -903,9 +974,9 @@ EOF
   'soca_diff_cor_hz_fn': ${soca_diff_cor_hz_fn}
   'soca_diff_cor_vt_fn': ${soca_diff_cor_vt_fn}
 " # End of settings variable
-    fn_template="template.parameters_diffusion.yaml"
+    fn_template="template.soca_parameters_diffusion_cpc.yaml"
     fp_template="${PARMufsda}/jedi/soca/${fn_template}"
-    jedi_nml_fn="parameters_diffusion.yaml"
+    jedi_nml_fn="soca_parameters_diffusion.yaml"
     ${USHufsda}/fill_jinja_template.py -u "${settings}" -t "${fp_template}" -o "${jedi_nml_fn}"
   
     ### Executable for parameters diffusion
