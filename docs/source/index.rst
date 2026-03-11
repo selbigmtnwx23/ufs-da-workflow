@@ -6,12 +6,8 @@ UFS Land DA User's Guide |release|
 
 .. toctree::
    :numbered:
-   :maxdepth: 5
+   :maxdepth: 1
    :caption: Contents:
 
-   BackgroundInfo/index
-   BuildingRunningTesting/index
-   CustomizingTheWorkflow/index
-   Reference/index
    QuickStart/index
 
