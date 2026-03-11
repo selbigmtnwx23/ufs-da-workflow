@@ -6,7 +6,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = "UFS Land DA User's Guide"
+project = "UFS DA Workflow User's Guide"
 copyright = '2024, '
 author = ' '
 

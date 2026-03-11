@@ -23,6 +23,7 @@ Clone the Land DA workflow repository. To clone the ``develop`` branch, run:
 
    git clone -b develop --recursive https://github.com/ufs-community/ufs-da-workflow
 
+.. _BuildandRun:
 
 Build and Run the DA Workflow
 ******************************
