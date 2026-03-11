@@ -1,16 +1,16 @@
 .. _QuickStart:
 
-******************************************************************
-Running the UFS DA Workflow (Ursa/Orion/Hercules/Gaea-C6/Derecho)
-******************************************************************
+***************************
+Running the UFS DA Workflow
+***************************
 
-This chapter provides instructions for building and running the Unified Forecast System (:term:`UFS`) DA Workflow System using a Jan. 19-20, 2025 00z sample :term:`LND` :term:`warmstart` case using :term:`ERA5` and :term:`IMS` data and the 3D-Var algorithm with the UFS Noah-MP land component and data atmosphere (:term:`DATM`) component.
+This chapter provides instructions for building and running the Unified Forecast System (:term:`UFS`) DA Workflow System. This is available on Ursa, Orion, Hercules, Gaea-C6 and Derecho.
 
 .. include:: ../doc-snippets/gcblizzard-desc.rst
 
 .. attention::
    
-   These steps are designed for use on :ref:`Level 1 <LevelsOfSupport>` systems (e.g., Ursa, Hercules) and may require significant changes on other systems. It is recommended that users on other systems run the containerized version of Land DA. Users may reference :numref:`Chapter %s: Containerized Land DA Workflow <Container>` for instructions.
+   These steps are designed for use on :ref:`Level 1 <LevelsOfSupport>` systems (e.g., Ursa, Orion, Hercules, Gaea-C6 and Derecho.)
 
 .. _GetCode:
 
