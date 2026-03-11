@@ -4,7 +4,7 @@
 Running the UFS DA Workflow
 ***************************
 
-This chapter provides instructions for building and running the Unified Forecast System (:term:`UFS`) DA Workflow System. This is available on Ursa, Orion, Hercules, Gaea-C6 and Derecho.
+This chapter provides instructions for building and running the Unified Forecast System (:term:`UFS`) DA Workflow System.
 
 .. include:: ../doc-snippets/gcblizzard-desc.rst
 
