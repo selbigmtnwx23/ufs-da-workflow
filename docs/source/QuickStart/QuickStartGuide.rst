@@ -36,7 +36,7 @@ Build and Run the DA Workflow
 
 #. Run the build script ``app_build.sh``:
 
-Note: Running and building the UFS Da Workflow options below will have different options based off the use of the JEDI-Bundle/GDAS and Workflow components
+Note: Running and building the UFS Da Workflow options below will have different run styles based off the use of the JEDI-Bundle/GDAS and Workflow components and where '[APP]' is `S2SWA`, `S2SWAL`, `NG-GODAS`, `ATML`, or `ATM`.
 
 #. Option 1: Workflow components: YES, JEDI-bundle: NO
 
@@ -44,15 +44,11 @@ Note: Running and building the UFS Da Workflow options below will have different
 
       ./app_build.sh -a=[APP]
 
-   Where '[APP]' is `S2SWA`, `S2SWAL`, `NG-GODAS`, `ATML`, or `ATM`.
-
 #. Option 2: Workflow components: YES, JEDI-bundle: YES
 
    .. code-block:: console
 
       ./app_build.sh -a=[APP] --jedi=bundle
-
-   Where '[APP]' is `S2SWA`, `S2SWAL`, `NG-GODAS`, `ATML`, or `ATM`.
 
 #. Option 3: Workflow components: NO, JEDI-bundle: YES
 
@@ -60,23 +56,17 @@ Note: Running and building the UFS Da Workflow options below will have different
 
       ./app_build.sh -a=[APP] --jedi=bundle-only
 
-   Where '[APP]' is `S2SWA`, `S2SWAL`, `NG-GODAS`, `ATML`, or `ATM`.
-
 #. Option 4: Workflow components: YES, GDAS App: YES
 
    .. code-block:: console
 
       ./app_build.sh -a=[APP] --jedi=gdas
 
-   Where '[APP]' is `S2SWA`, `S2SWAL`, `NG-GODAS`, `ATML`, or `ATM`.
-
 #. Option 5: Workflow components: NO, JEDI-bundle: YES
 
    .. code-block:: console
 
       ./app_build.sh -a=[APP] --jedi=gdas-only
-
-   Where '[APP]' is `S2SWA`, `S2SWAL`, `NG-GODAS`, `ATML`, or `ATM`.
 
 .. _load-env:
 
