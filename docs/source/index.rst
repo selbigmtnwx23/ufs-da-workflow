@@ -9,5 +9,5 @@ UFS DA Workflow User's Guide |release|
    :maxdepth: 3
    :caption: Contents:
 
-   QuickStart/Index
+   QuickStart/index
 
