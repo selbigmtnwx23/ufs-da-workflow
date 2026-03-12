@@ -9,4 +9,4 @@ ush/__pycache__/
 
 __pycache__
 *.swp
-*/.DS_Store
+.DS_Store
